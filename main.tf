@@ -1,13 +1,20 @@
-provider "aws" {
+variable "name_length" {
+  description = "The number of words"
+  default     = 3
 }
 
-terraform {
-  backend "remote" {
-    hostname = "107.106.30.36"
-    organization = "coe-tlz"
+variable "keeper_value" {
+  default = "b"
+}
 
-    workspaces {
-      name = "tlz-app-ccc-cccd1airaccgenericocp001-dev-resources"
-    }
+resource "random_pet" "pet_name" {
+  keepers = {
+    generate = "${var.keeper_value}"
   }
+  length    = var.name_length
+  separator = "-"
+}
+
+output "pet_name" {
+  value = random_pet.pet_name.id
 }

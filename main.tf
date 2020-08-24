@@ -1,6 +1,6 @@
 provider "aws" {
   version = "~> 2.70.0"
-  region = "eu_west-1"
+  region = "eu-west-1"
 }
 
 variable "name_length" {

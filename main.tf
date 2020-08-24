@@ -1,8 +1,3 @@
-provider "aws" {
-  version = "~> 2.70.0"
-  region = "eu-west-1"
-}
-
 variable "name_length" {
   description = "The number of words"
   default     = 3
@@ -22,6 +17,14 @@ resource "random_pet" "pet_name" {
 
 output "pet_name" {
   value = random_pet.pet_name.id
+}
+
+#####
+##### Simple AWS integration
+
+provider "aws" {
+  version = "~> 2.70.0"
+  region = "eu-west-1"
 }
 
 # Extract the AMI id
@@ -44,6 +47,7 @@ data "aws_ami" "ami_id" {
 resource "aws_instance" "simple_instance" {
   ami           = data.aws_ami.ami_id.id
   instance_type = "t2.micro"
+  subnet_id = "subnet-088d81b8518823717"
 
   tags = {
     Name = "basic-test-TFE"

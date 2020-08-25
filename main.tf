@@ -61,7 +61,21 @@ resource "aws_security_group" "foo_sg" {
   name        = "foo_sg"
   vpc_id      = "vpc-0308341d4c4889e7f"
   description = "Does nothing"
+  
+  ingress {
+    description = "Allow all"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [aws_vpc.main.cidr_block]
+  }
 
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   tags = {
     Name = "basic-test-TFE"
   }

@@ -48,8 +48,22 @@ resource "aws_instance" "simple_instance" {
   ami           = data.aws_ami.ami_id.id
   instance_type = "t2.micro"
   subnet_id = "subnet-088d81b8518823717"
+  security_groups = [
+    aws_security_group.foo_sg.id
+  ]
 
   tags = {
     Name = "basic-test-TFE"
   }
 }
+
+resource "aws_security_group" "foo_sg" {
+  name        = "foo_sg"
+  vpc_id      = "vpc-0308341d4c4889e7f"
+  description = "Does nothing"
+
+  tags = {
+    Name = "basic-test-TFE"
+  }
+}
+

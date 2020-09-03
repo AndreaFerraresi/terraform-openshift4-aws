@@ -2,7 +2,7 @@
 
 resource "aws_security_group" "foo_sg" {
   name        = "foo_sg"
-  vpc_id      = var.default_vpc
+  vpc_id      = var.account_vpc
   description = "Does nothing"
 
   ingress {

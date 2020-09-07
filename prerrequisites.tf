@@ -19,8 +19,7 @@ resource "aws_security_group" "foo_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-  tags = {
-    Name = "basic-test-TFE"
+  tags = var.tag_list
   }
 }
 

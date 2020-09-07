@@ -19,8 +19,8 @@ resource "aws_security_group" "foo_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   tags = var.tag_list
-  }
 }
 
 # resource "aws_key_pair" "ssh_key" {

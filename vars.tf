@@ -15,7 +15,7 @@ variable account_subnet {
 }
 
 variable ec2_os {
-  default  = "l"
+  default = "l"
 }
 
 variable iam_instance_profile {
@@ -75,6 +75,7 @@ variable tracking_code {
 }
 
 variable tag_list {
-  default = {  
-    Name = "basic-test-TFE"
+  default = {
+    "Name" = "basic-test-TFE"
   }
+}

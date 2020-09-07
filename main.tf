@@ -40,13 +40,13 @@ resource "aws_instance" "simple_instance" {
 }
 
 # Create a S3 bucket
-# resource "aws_s3_bucket" "bucket_test" {
-#   bucket = "ccc-test-bucket"
-#   acl    = "private"
+resource "aws_s3_bucket" "bucket_test" {
+  bucket = "ccc-test-bucket"
+  acl    = "private"
 
-#   tags = var.tag_list
-#   }
-# }
+  tags = var.tag_list
+  }
+}
 
 # module "eac.aws.modules.ec2-sa" {
 #   source = "eac.aws.modules.ec2-sa"

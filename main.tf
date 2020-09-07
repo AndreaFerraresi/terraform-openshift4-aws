@@ -45,7 +45,6 @@ resource "aws_s3_bucket" "bucket_test" {
   acl    = "private"
 
   tags = var.tag_list
-  }
 }
 
 # module "eac.aws.modules.ec2-sa" {

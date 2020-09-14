@@ -15,9 +15,14 @@ provider "aws" {
   skip_region_validation = var.aws_region == "me-south-1"
 }
 
-resource "null_resource" "get_aws_cred" {
+resource "null_resource" "get_aws_access_key_id" {
   provisioner "local-exec" {
     command = "export TF_aws_access_key_id=$AWS_ACCESS_KEY_ID"
+  }
+}
+
+resource "null_resource" "get_aws_secret_access_key" {
+  provisioner "local-exec" {
     command = "export TF_aws_secret_access_key=$AWS_SECRET_ACCESS_KEY"
   }
 }

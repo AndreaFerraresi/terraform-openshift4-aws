@@ -21,6 +21,14 @@ resource "null_resource" "get_aws_access_key_id" {
   }
 }
 
+resource "aws_route53_zone" "private" {
+  name = "ferraresi.test"
+
+  vpc {
+    vpc_id = "vpc-087a3bad9b14392ad"
+  }
+}
+
 resource "null_resource" "get_aws_secret_access_key" {
   provisioner "local-exec" {
     command = "export TF_aws_secret_access_key=$AWS_SECRET_ACCESS_KEY"

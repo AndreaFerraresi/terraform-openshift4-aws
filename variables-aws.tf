@@ -26,6 +26,7 @@ variable "aws_worker_instance_type" {
 }
 
 variable "aws_ami" {
+  default = "ami-0bdd69d8e7cd18188"
   type = string
   description = <<EOF
 AMI for all nodes.  An encrypted copy of this AMI will be used.
@@ -99,6 +100,7 @@ variable "aws_region" {
 }
 
 variable "aws_azs" {
+  default = [ "eu-west-1a" ]
   type = list(string)
   description = "The availability zones in which to create the nodes."
 }
@@ -124,7 +126,7 @@ variable "aws_private_subnets" {
 variable "aws_publish_strategy" {
   type = string
   description = "The cluster publishing strategy, either Internal or External"
-  default = "External"
+  default = "Internal"
 }
 
 variable "airgapped" {

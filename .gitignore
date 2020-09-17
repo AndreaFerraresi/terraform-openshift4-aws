@@ -1,3 +1,4 @@
 .terraform
-aws_config
+aws_config*
+
 

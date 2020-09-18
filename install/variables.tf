@@ -114,3 +114,9 @@ variable "airgapped" {
     repository = ""
   }
 }
+
+variable "aws_publish_strategy" {
+  type = string
+  description = "publish strategy for install-config.yml: Internal or External"
+  default = "Internal"
+}

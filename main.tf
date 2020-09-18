@@ -56,6 +56,7 @@ module "installer" {
   aws_worker_availability_zones = var.aws_azs
   aws_worker_instance_type = var.aws_worker_instance_type
   airgapped = var.airgapped
+  aws_publish_strategy = var.aws_publish_strategy
 }
 
 module "vpc" {

@@ -98,6 +98,7 @@ networking:
 platform:
   aws:
     region: ${var.aws_region}
+publish: ${var.aws_publish_strategy}
 pullSecret: '${var.openshift_pull_secret}'
 sshKey: '${tls_private_key.installkey.public_key_openssh}'
 %{if var.airgapped["enabled"]}imageContentSources:

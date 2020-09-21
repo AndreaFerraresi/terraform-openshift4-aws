@@ -4,6 +4,9 @@ locals {
 }
 
 resource "null_resource" "openshift_installer" {
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
   provisioner "local-exec" {
     command = <<EOF
 case $(uname -s) in
@@ -29,6 +32,9 @@ EOF
 }
 
 resource "null_resource" "openshift_client" {
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
   provisioner "local-exec" {
     command = <<EOF
 case $(uname -s) in
@@ -55,6 +61,9 @@ EOF
 }
 
 resource "null_resource" "aws_credentials" {
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
   provisioner "local-exec" {
     command = "mkdir -p ~/.aws"
   }
@@ -119,6 +128,11 @@ resource "local_file" "install_config" {
 }
 
 resource "null_resource" "generate_manifests" {
+
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
+
   triggers = {
     install_config =  data.template_file.install_config_yaml.rendered
   }
@@ -151,6 +165,10 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
   depends_on = [
     null_resource.generate_manifests
   ]
+
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
 
   triggers = {
     install_config =  data.template_file.install_config_yaml.rendered
@@ -198,6 +216,10 @@ resource "null_resource" "manifest_cleanup_dns_config" {
   ]
 
   triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
+
+  triggers = {
     install_config =  data.template_file.install_config_yaml.rendered
     local_file     =  local_file.install_config.id
   }
@@ -239,6 +261,10 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
   depends_on = [
     null_resource.generate_manifests
   ]
+
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
 
   triggers = {
     install_config =  data.template_file.install_config_yaml.rendered
@@ -430,6 +456,10 @@ resource "null_resource" "generate_ignition_config" {
   ]
 
   triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
+
+  triggers = {
     install_config                   =  data.template_file.install_config_yaml.rendered
     local_file_install_config        =  local_file.install_config.id
     local_file_infrastructure_config =  local_file.cluster_infrastructure_config.id
@@ -512,6 +542,9 @@ data "local_file" "cluster_infrastructure" {
 
 resource "null_resource" "get_auth_config" {
   depends_on = [null_resource.generate_ignition_config]
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
   provisioner "local-exec" {
     when    = create
     command = "cp ${path.module}/temp/auth/* ${path.root}/ "

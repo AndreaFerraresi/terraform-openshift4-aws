@@ -130,11 +130,8 @@ resource "local_file" "install_config" {
 resource "null_resource" "generate_manifests" {
 
   triggers = {
-    random_number = "${data.aws_caller_identity.current.user_id} "
-  }
-
-  triggers = {
     install_config =  data.template_file.install_config_yaml.rendered
+    random_number = "${data.aws_caller_identity.current.user_id}"
   }
 
   depends_on = [
@@ -167,12 +164,9 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
   ]
 
   triggers = {
-    random_number = "${data.aws_caller_identity.current.user_id} "
-  }
-
-  triggers = {
     install_config =  data.template_file.install_config_yaml.rendered
     local_file     =  local_file.install_config.id
+    random_number  = "${data.aws_caller_identity.current.user_id}"
   }
 
   provisioner "local-exec" {
@@ -216,12 +210,9 @@ resource "null_resource" "manifest_cleanup_dns_config" {
   ]
 
   triggers = {
-    random_number = "${data.aws_caller_identity.current.user_id} "
-  }
-
-  triggers = {
     install_config =  data.template_file.install_config_yaml.rendered
     local_file     =  local_file.install_config.id
+    random_number = "${data.aws_caller_identity.current.user_id}"
   }
 
   provisioner "local-exec" {
@@ -263,12 +254,9 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
   ]
 
   triggers = {
-    random_number = "${data.aws_caller_identity.current.user_id} "
-  }
-
-  triggers = {
     install_config =  data.template_file.install_config_yaml.rendered
     local_file     =  local_file.install_config.id
+    random_number = "${data.aws_caller_identity.current.user_id}"
   }
 
   provisioner "local-exec" {
@@ -456,13 +444,10 @@ resource "null_resource" "generate_ignition_config" {
   ]
 
   triggers = {
-    random_number = "${data.aws_caller_identity.current.user_id} "
-  }
-
-  triggers = {
     install_config                   =  data.template_file.install_config_yaml.rendered
     local_file_install_config        =  local_file.install_config.id
     local_file_infrastructure_config =  local_file.cluster_infrastructure_config.id
+    random_number = "${data.aws_caller_identity.current.user_id}"
   }
 
   provisioner "local-exec" {

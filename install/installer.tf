@@ -3,6 +3,8 @@ locals {
   infrastructure_id = var.infrastructure_id
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "null_resource" "openshift_installer" {
   triggers = {
     random_number = "${data.aws_caller_identity.current.user_id} "

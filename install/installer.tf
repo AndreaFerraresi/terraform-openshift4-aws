@@ -585,3 +585,13 @@ spec:
     source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 }
+
+resource "null_resource" "print_openshift-install_output" {
+  provisioner "local-exec" {
+    command = "echo 'kubeconfig' && cat ./kubeconfig"
+  }
+
+  provisioner "local-exec" {
+    command = "echo 'kubeadmin-password' && cat ./kubeadmin-password"
+  }
+}

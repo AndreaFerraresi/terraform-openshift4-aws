@@ -83,7 +83,6 @@ aws_secret_access_key = ${var.aws_secret_access_key}
 EOF
 }
 
-
 data "template_file" "install_config_yaml" {
   template = <<-EOF
 apiVersion: v1
@@ -122,7 +121,6 @@ sshKey: '${tls_private_key.installkey.public_key_openssh}'
 %{endif}
 EOF
 }
-
 
 resource "local_file" "install_config" {
   content  =  data.template_file.install_config_yaml.rendered
@@ -205,6 +203,29 @@ status:
     type: AWS
 EOF
 }
+
+# make masters schedulable
+resource "local_file" "cluster_scheduler_config" {
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename         = "${path.module}/temp/manifests/cluster-scheduler-02-config.yml"
+
+  content = <<EOF
+apiVersion: config.openshift.io/v1
+kind: Scheduler
+metadata:
+  creationTimestamp: null
+  name: cluster
+spec:
+  mastersSchedulable: true
+  policy:
+    name: ""
+status: {}
+EOF
+}
+
 # modify manifests/cluster-dns-02-config.yml
 resource "null_resource" "manifest_cleanup_dns_config" {
   depends_on = [
@@ -443,6 +464,7 @@ resource "null_resource" "generate_ignition_config" {
     local_file.awssecrets3,
     local_file.airgapped_registry_upgrades,
     local_file.cluster_infrastructure_config,
+    local_file.cluster_scheduler_config,
   ]
 
   triggers = {

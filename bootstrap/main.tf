@@ -193,4 +193,3 @@ resource "aws_security_group_rule" "bootstrap_journald_gateway" {
   from_port   = 19531
   to_port     = 19531
 }
-

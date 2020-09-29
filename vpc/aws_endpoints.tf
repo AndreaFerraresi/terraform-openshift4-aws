@@ -14,7 +14,7 @@ resource "aws_vpc_endpoint" "private_ec2" {
      aws_security_group.private_ec2_api.id
   ]
 
-  subnet_ids =  var.private_subnets
+  subnet_ids = var.private_subnets
   tags =  merge(
     var.tags,
     map(
@@ -41,7 +41,7 @@ resource "aws_vpc_endpoint" "private_ecr" {
      aws_security_group.private_ecr_api[0].id
   ]
 
-  subnet_ids =  aws_subnet.private_subnet.*.id
+  subnet_ids = var.private_subnets
   tags =  merge(
     var.tags,
     map(
@@ -68,7 +68,7 @@ resource "aws_vpc_endpoint" "private_elb" {
      aws_security_group.private_elb_api[0].id
   ]
 
-  subnet_ids =  aws_subnet.private_subnet.*.id
+  subnet_ids = var.private_subnets
   tags =  merge(
     var.tags,
     map(

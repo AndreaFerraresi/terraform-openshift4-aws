@@ -13,10 +13,22 @@ variable "aws_bootstrap_instance_type" {
   default = "i3.xlarge"
 }
 
+variable "aws_master_instance_count" {
+  type = number
+  description = "Number of master nodes for the control plane"
+  default = 3
+}
+
 variable "aws_master_instance_type" {
   type = string
   description = "Instance type for the master node(s). Default: `m4.xlarge`."
   default = "m4.xlarge"
+}
+
+variable "aws_worker_instance_count" {
+  type = number
+  description = "Number of worker nodes for the data plane"
+  default = 2
 }
 
 variable "aws_worker_instance_type" {

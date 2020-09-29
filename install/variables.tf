@@ -63,11 +63,16 @@ EOF
 
 }
 
-
 variable "master_count" {
   type        = number
   description = "The number of master nodes."
   default     = 3
+}
+
+variable "worker_count" {
+  type        = number
+  description = "The number of master nodes."
+  default     = 2
 }
 
 variable "openshift_pull_secret" {

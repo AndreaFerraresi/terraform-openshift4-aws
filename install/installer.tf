@@ -90,7 +90,7 @@ baseDomain: ${var.domain}
 compute:
 - hyperthreading: Enabled
   name: worker
-  replicas: 1
+  replicas: ${var.worker_count}
 controlPlane:
   hyperthreading: Enabled
   name: master

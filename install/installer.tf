@@ -364,9 +364,10 @@ spec:
 EOF
 }
 
-#redo the worker machineset
+# Set count to 0. Review if the block is necessary later
 resource "local_file" "ingresscontroller" {
-  count           = var.airgapped.enabled ? 1 : 0
+  # count           = var.airgapped.enabled ? 1 : 0
+  count           = 0
 
   depends_on = [
     null_resource.generate_manifests
@@ -586,12 +587,22 @@ spec:
 EOF
 }
 
-resource "null_resource" "print_openshift-install_output" {
-  provisioner "local-exec" {
-    command = "echo 'kubeconfig' && cat ./kubeconfig"
-  }
+data "local_file" "kubeconfig" {
+  depends_on = [ null_resource.get_auth_config ]
+  filename =  "${path.root}/kubeconfig"
+}
 
-  provisioner "local-exec" {
-    command = "echo 'kubeadmin-password' && cat ./kubeadmin-password"
-  }
+data "local_file" "kubeadmin-password" {
+  depends_on = [ null_resource.get_auth_config ]
+  filename =  "${path.root}/kubeadmin-password"
+}
+
+output "kubeconfig" {
+  depends_on = [ local_file.kubeconfig ]
+  value = data.local_file.kubeconfig.content
+}
+
+output "kubeadmin-password" {
+  depends_on = [ local_file.kubeadmin-password ]
+  value = data.local_file.kubeadmin-password.content
 }

@@ -174,3 +174,31 @@ module "workers" {
   user_data_ign            = module.installer.worker_ign
   publish_strategy         = var.aws_publish_strategy
 }
+
+# resource "null_resource" "wait_for_install_result" {
+#   triggers = {
+#     random_number = "${module.masters.ip_addresses}"
+#   }
+#
+#   provisioner "local-exec" {
+    # command = <<EOF
+# c="${var.installer_wait_time}"
+# install-finish=""
+# while [ $c -gt 0 ] && [ -z $install-finish ]; do
+#  echo "Waiting for $((c--)) minutes
+#  install-finish=$(openshift-installer --wait-for ....)
+#  sleep 60
+# done
+# EOF
+#   }
+# }
+
+# resource "null_resource" "ingress_load_balancer" {
+#  depends_on = ["null_resource.wait_for_install_result"]
+#
+  # provisioner "local-exec" {
+    # command = "oc get svc/router-default -n openshift-ingress -o=jsonpath={.status.loadBalancer.ingress[0].hostname}""
+  # }
+# }
+
+# TBD --> create *.apps entry in Route53/Infoblox

@@ -148,3 +148,9 @@ variable "airgapped" {
     repository = ""
   }
 }
+
+variable "installer_wait_time" {
+  type = number
+  description = "Number of minutes to wait for the installer to finish cluster deployment"
+  default = 30
+}

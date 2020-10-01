@@ -55,6 +55,7 @@ module "installer" {
   worker_count                  = var.aws_worker_instance_count
   openshift_pull_secret         = var.openshift_pull_secret
   openshift_installer_url       = var.openshift_installer_url
+  openshift_version             = var.openshift_version
   aws_worker_root_volume_iops   = var.aws_worker_root_volume_iops
   aws_worker_root_volume_size   = var.aws_worker_root_volume_size
   aws_worker_root_volume_type   = var.aws_worker_root_volume_type

@@ -14,6 +14,12 @@ EOF
   default     = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
 }
 
+variable "openshift_version" {
+  type        = string
+  description = "The openshift version to use. Leave blank and url to latest for the latest available"
+  default     = ""
+}
+
 variable "aws_access_key_id" {
   type        = string
   description = "AWS access key"

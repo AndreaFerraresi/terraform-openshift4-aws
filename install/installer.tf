@@ -562,7 +562,7 @@ resource "null_resource" "get_auth_config" {
   }
   provisioner "local-exec" {
     when    = destroy
-    command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
+    command = "rm -f ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
   }
 }
 

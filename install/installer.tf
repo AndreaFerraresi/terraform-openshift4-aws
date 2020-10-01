@@ -598,12 +598,3 @@ data "local_file" "kubeadmin-password" {
   filename =  "${path.root}/kubeadmin-password"
 }
 
-output "kubeconfig" {
-  depends_on = [ local_file.kubeconfig ]
-  value = data.local_file.kubeconfig.content
-}
-
-output "kubeadmin-password" {
-  depends_on = [ local_file.kubeadmin-password ]
-  value = data.local_file.kubeadmin-password.content
-}

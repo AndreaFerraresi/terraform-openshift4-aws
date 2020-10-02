@@ -31,19 +31,20 @@ resource "null_resource" "get_aws_secret_access_key" {
   }
 }
 
-module "iam" {
-  source = "./iam"
+# module "iam" {
+#   source = "./iam"
 
-  cluster_id = var.cluster_id
+#   cluster_id = var.cluster_id
 
-  tags = local.tags
-}
+#   tags = local.tags
+# }
 
 module "installer" {
   source = "./install"
 
   ami                           = aws_ami_copy.main.id
   dns_public_id                 = module.dns.public_dns_id
+
   infrastructure_id             = var.cluster_id
   clustername                   = var.clustername
   domain                        = var.base_domain
@@ -153,28 +154,28 @@ module "masters" {
   user_data_ign            = module.installer.master_ign
   publish_strategy         = var.aws_publish_strategy
 }
+ 
+module "workers" {
+  source = "./worker"
 
-# module "workers" {
-#   source = "./worker"
+  cluster_id    = var.cluster_id
+  instance_type = var.aws_worker_instance_type
 
-#   cluster_id    = var.cluster_id
-#   instance_type = var.aws_worker_instance_type
+  tags = local.tags
 
-#   tags = local.tags
-
-#   availability_zones       = var.aws_azs
-#   az_to_subnet_id          = module.vpc.az_to_private_subnet_id
-#   instance_count           = var.aws_worker_instance_count
-#   worker_sg_ids            = [module.vpc.worker_sg_id]
-#   root_volume_iops         = var.aws_worker_root_volume_iops
-#   root_volume_size         = var.aws_worker_root_volume_size
-#   root_volume_type         = var.aws_worker_root_volume_type
-#   target_group_arns        = module.vpc.aws_lb_target_group_arns
-#   target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
-#   ec2_ami                  = aws_ami_copy.main.id
-#   user_data_ign            = module.installer.worker_ign
-#   publish_strategy         = var.aws_publish_strategy
-# }
+  availability_zones       = var.aws_azs
+  az_to_subnet_id          = module.vpc.az_to_private_subnet_id
+  instance_count           = var.aws_worker_instance_count
+  worker_sg_ids            = [module.vpc.worker_sg_id]
+  root_volume_iops         = var.aws_worker_root_volume_iops
+  root_volume_size         = var.aws_worker_root_volume_size
+  root_volume_type         = var.aws_worker_root_volume_type
+  target_group_arns        = module.vpc.aws_lb_target_group_arns
+  target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
+  ec2_ami                  = aws_ami_copy.main.id
+  user_data_ign            = module.installer.worker_ign
+  publish_strategy         = var.aws_publish_strategy
+}
 
 # module "infra" {
 #   source = "./worker"

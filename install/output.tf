@@ -26,7 +26,6 @@ output "public_ssh_key" {
   value = tls_private_key.installkey.public_key_openssh
 }
 
-
 output "kubeconfig" {
   value = data.local_file.kubeconfig.content
 }

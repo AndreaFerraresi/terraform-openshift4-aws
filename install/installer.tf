@@ -41,10 +41,10 @@ resource "null_resource" "openshift_client" {
     command = <<EOF
 case $(uname -s) in
   Linux)
-    wget --no-check-certificate -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'
+    wget --no-check-certificate -r -l1 -np -nd ${var.openshift_installer_url}${var.openshift_version} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'
     ;;
   Darwin)
-    wget --no-check-certificate -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-mac-4*.tar.gz'
+    wget --no-check-certificate -r -l1 -np -nd ${var.openshift_installer_url}${var.openshift_version} -P ${path.module} -A 'openshift-client-mac-4*.tar.gz'
     ;;
   *)
     exit 1
@@ -249,8 +249,8 @@ resource "null_resource" "manifest_cleanup_dns_config" {
 
 #redo the dns config
 resource "local_file" "dns_config" {
-  #  count = var.airgapped.enabled ? 0 : 1
-  count = 1
+  count = var.airgapped.enabled ? 0 : 1
+
   depends_on = [
     null_resource.manifest_cleanup_dns_config
   ]
@@ -462,8 +462,8 @@ EOF
 resource "null_resource" "generate_ignition_config" {
   depends_on = [
     null_resource.manifest_cleanup_control_plane_machineset,
-    local_file.worker_machineset,
-    local_file.dns_config,
+    #local_file.worker_machineset,
+    #local_file.dns_config,
     local_file.ingresscontroller,
     local_file.awssecrets1,
     local_file.awssecrets2,
@@ -547,13 +547,13 @@ data "local_file" "worker_ign" {
   filename = "${path.module}/temp/worker.ign"
 }
 
-data "local_file" "cluster_infrastructure" {
-  depends_on = [
-    null_resource.generate_manifests
-  ]
+# data "local_file" "cluster_infrastructure" {
+#   depends_on = [
+#     null_resource.generate_manifests
+#   ]
 
-  filename = "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
-}
+#   filename = "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
+# }
 
 resource "null_resource" "get_auth_config" {
   depends_on = [null_resource.generate_ignition_config]

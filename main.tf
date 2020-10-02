@@ -11,28 +11,24 @@ data "aws_caller_identity" "current" {}
 
 provider "aws" {
   region = var.aws_region
-
-  # Validation of AWS Bahrain region was added in AWS TF provider v2.22
-  # so we skip when installing in me-south-1.
-  skip_region_validation = var.aws_region == "me-south-1"
 }
 
 resource "null_resource" "get_aws_access_key_id" {
-  triggers = {
-    random_number = "${data.aws_caller_identity.current.user_id} "
-  }
-  provisioner "local-exec" {
-    command = "export TF_aws_access_key_id=$AWS_ACCESS_KEY_ID"
-  }
+ triggers = {
+   random_number = "${data.aws_caller_identity.current.user_id} "
+ }
+ provisioner "local-exec" {
+   command = "export TF_VAR_aws_access_key_id=$AWS_ACCESS_KEY_ID"
+ }
 }
 
 resource "null_resource" "get_aws_secret_access_key" {
-  triggers = {
-    random_number = "${data.aws_caller_identity.current.user_id} "
-  }
-  provisioner "local-exec" {
-    command = "export TF_aws_secret_access_key=$AWS_SECRET_ACCESS_KEY"
-  }
+ triggers = {
+   random_number = "${data.aws_caller_identity.current.user_id} "
+ }
+ provisioner "local-exec" {
+   command = "export TF_VAR_aws_secret_access_key=$AWS_SECRET_ACCESS_KEY"
+ }
 }
 
 module "iam" {

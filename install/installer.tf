@@ -245,7 +245,8 @@ resource "null_resource" "manifest_cleanup_dns_config" {
 
 #redo the dns config
 resource "local_file" "dns_config" {
-  count = var.airgapped.enabled ? 0 : 1
+#  count = var.airgapped.enabled ? 0 : 1
+  count = 1
   depends_on = [
     null_resource.manifest_cleanup_dns_config
   ]
@@ -364,10 +365,10 @@ spec:
 EOF
 }
 
-# Set count to 0. Review if the block is necessary later
+#redo the worker machineset
 resource "local_file" "ingresscontroller" {
   # count           = var.airgapped.enabled ? 1 : 0
-  count           = 0
+  count           = var.airgapped.enabled ? 0 : 0
 
   depends_on = [
     null_resource.generate_manifests
@@ -561,7 +562,7 @@ resource "null_resource" "get_auth_config" {
   }
   provisioner "local-exec" {
     when    = destroy
-    command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
+    command = "rm -f ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
   }
 }
 

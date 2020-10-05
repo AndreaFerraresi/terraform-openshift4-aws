@@ -83,9 +83,9 @@ aws_secret_access_key = ${var.aws_secret_access_key}
 EOF
 }
 
-data "local_file" "pull_secret" {
-  filename = var.openshift_pull_secret
-}
+# data "local_file" "pull_secret" {
+#   filename = var.openshift_pull_secret
+# }
 
 data "template_file" "install_config_yaml" {
   template = <<-EOF
@@ -113,7 +113,7 @@ platform:
   aws:
     region: ${var.aws_region}
 publish: ${var.aws_publish_strategy}
-pullSecret: '${data.local_file.pull_secret.content}'
+pullSecret: '${var.openshift_pull_secret}'
 sshKey: '${tls_private_key.installkey.public_key_openssh}'
 %{if var.airgapped["enabled"]}imageContentSources:
 - mirrors:

@@ -83,10 +83,6 @@ aws_secret_access_key = ${var.aws_secret_access_key}
 EOF
 }
 
-# data "local_file" "pull_secret" {
-#   filename = var.openshift_pull_secret
-# }
-
 data "template_file" "install_config_yaml" {
   template = <<-EOF
 apiVersion: v1
@@ -462,8 +458,8 @@ EOF
 resource "null_resource" "generate_ignition_config" {
   depends_on = [
     null_resource.manifest_cleanup_control_plane_machineset,
-    #local_file.worker_machineset,
-    #local_file.dns_config,
+    local_file.worker_machineset,
+    local_file.dns_config,
     local_file.ingresscontroller,
     local_file.awssecrets1,
     local_file.awssecrets2,
@@ -546,14 +542,6 @@ data "local_file" "worker_ign" {
 
   filename = "${path.module}/temp/worker.ign"
 }
-
-# data "local_file" "cluster_infrastructure" {
-#   depends_on = [
-#     null_resource.generate_manifests
-#   ]
-
-#   filename = "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
-# }
 
 resource "null_resource" "get_auth_config" {
   depends_on = [null_resource.generate_ignition_config]

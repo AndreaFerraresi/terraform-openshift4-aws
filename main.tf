@@ -31,14 +31,6 @@ resource "null_resource" "get_aws_secret_access_key" {
   }
 }
 
-# module "iam" {
-#   source = "./iam"
-
-#   cluster_id = var.cluster_id
-
-#   tags = local.tags
-# }
-
 module "installer" {
   source = "./install"
 
@@ -177,52 +169,24 @@ module "workers" {
   publish_strategy         = var.aws_publish_strategy
 }
 
-# module "infra" {
-#   source = "./worker"
+module "infra" {
+  source = "./infra"
 
-#   cluster_id    = var.cluster_id
-#   instance_type = var.aws_infra_instance_type
+  cluster_id    = var.cluster_id
+  instance_type = var.aws_infra_instance_type
 
-#   tags = local.tags
+  tags = local.tags
 
-#   availability_zones       = var.aws_azs
-#   az_to_subnet_id          = module.vpc.az_to_private_subnet_id
-#   instance_count           = var.aws_infra_instance_count
-#   worker_sg_ids            = [module.vpc.worker_sg_id]
-#   root_volume_iops         = var.aws_worker_root_volume_iops
-#   root_volume_size         = var.aws_worker_root_volume_size
-#   root_volume_type         = var.aws_worker_root_volume_type
-#   target_group_arns        = module.vpc.aws_lb_target_group_arns
-#   target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
-#   ec2_ami                  = aws_ami_copy.main.id
-#   user_data_ign            = module.installer.worker_ign
-#   publish_strategy         = var.aws_publish_strategy
-# }
-
-# resource "null_resource" "wait_for_install_result" {
-#   triggers = {
-#     random_number = "${module.masters.ip_addresses}"
-#   }
-#
-#   provisioner "local-exec" {
-# command = <<EOF
-# c="${var.installer_wait_time}"
-# install-finish=""
-# while [ $c -gt 0 ] && [ -z $install-finish ]; do
-#  echo "Waiting for $((c--)) minutes
-#  install-finish=$(openshift-installer --wait-for ....)
-#  sleep 60
-# done
-# EOF
-#   }
-# }
-
-# resource "null_resource" "ingress_load_balancer" {
-#  depends_on = ["null_resource.wait_for_install_result"]
-#
-# provisioner "local-exec" {
-# command = "oc get svc/router-default -n openshift-ingress -o=jsonpath={.status.loadBalancer.ingress[0].hostname}""
-# }
-# }
-
-# TBD --> create *.apps entry in Route53/Infoblox
+  availability_zones       = var.aws_azs
+  az_to_subnet_id          = module.vpc.az_to_private_subnet_id
+  instance_count           = var.aws_infra_instance_count
+  worker_sg_ids            = [module.vpc.worker_sg_id]
+  root_volume_iops         = var.aws_worker_root_volume_iops
+  root_volume_size         = var.aws_worker_root_volume_size
+  root_volume_type         = var.aws_worker_root_volume_type
+  target_group_arns        = module.vpc.aws_lb_target_group_arns
+  target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
+  ec2_ami                  = aws_ami_copy.main.id
+  user_data_ign            = module.installer.worker_ign
+  publish_strategy         = var.aws_publish_strategy
+}

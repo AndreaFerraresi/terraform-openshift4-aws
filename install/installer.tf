@@ -1,17 +1,22 @@
 locals {
-#  infrastructure_id = "${var.infrastructure_id != "" ? "${var.infrastructure_id}" : "${var.clustername}-${random_id.clusterid.hex}"}"
+  #  infrastructure_id = "${var.infrastructure_id != "" ? "${var.infrastructure_id}" : "${var.clustername}-${random_id.clusterid.hex}"}"
   infrastructure_id = var.infrastructure_id
 }
 
+data "aws_caller_identity" "current" {}
+
 resource "null_resource" "openshift_installer" {
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
   provisioner "local-exec" {
     command = <<EOF
 case $(uname -s) in
   Linux)
-    wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-linux-4*.tar.gz'
+    wget --no-check-certificate -r -l1 -np -nd ${var.openshift_installer_url}${var.openshift_version} -P ${path.module} -A 'openshift-install-linux-4*.tar.gz'
     ;;
   Darwin)
-    wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-install-mac-4*.tar.gz'
+    wget --no-check-certificate -r -l1 -np -nd ${var.openshift_installer_url}${var.openshift_version} -P ${path.module} -A 'openshift-install-mac-4*.tar.gz'
     ;;
   *) exit 1
     ;;
@@ -29,14 +34,17 @@ EOF
 }
 
 resource "null_resource" "openshift_client" {
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
   provisioner "local-exec" {
     command = <<EOF
 case $(uname -s) in
   Linux)
-    wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'
+    wget --no-check-certificate -r -l1 -np -nd ${var.openshift_installer_url}${var.openshift_version} -P ${path.module} -A 'openshift-client-linux-4*.tar.gz'
     ;;
   Darwin)
-    wget -r -l1 -np -nd ${var.openshift_installer_url} -P ${path.module} -A 'openshift-client-mac-4*.tar.gz'
+    wget --no-check-certificate -r -l1 -np -nd ${var.openshift_installer_url}${var.openshift_version} -P ${path.module} -A 'openshift-client-mac-4*.tar.gz'
     ;;
   *)
     exit 1
@@ -55,6 +63,9 @@ EOF
 }
 
 resource "null_resource" "aws_credentials" {
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
   provisioner "local-exec" {
     command = "mkdir -p ~/.aws"
   }
@@ -71,7 +82,6 @@ aws_access_key_id = ${var.aws_access_key_id}
 aws_secret_access_key = ${var.aws_secret_access_key}
 EOF
 }
-
 
 data "template_file" "install_config_yaml" {
   template = <<-EOF
@@ -98,7 +108,8 @@ networking:
 platform:
   aws:
     region: ${var.aws_region}
-pullSecret: '${file(var.openshift_pull_secret)}'
+publish: ${var.aws_publish_strategy}
+pullSecret: '${var.openshift_pull_secret}'
 sshKey: '${tls_private_key.installkey.public_key_openssh}'
 %{if var.airgapped["enabled"]}imageContentSources:
 - mirrors:
@@ -111,15 +122,16 @@ sshKey: '${tls_private_key.installkey.public_key_openssh}'
 EOF
 }
 
-
 resource "local_file" "install_config" {
-  content  =  data.template_file.install_config_yaml.rendered
-  filename =  "${path.module}/install-config.yaml"
+  content  = data.template_file.install_config_yaml.rendered
+  filename = "${path.module}/install-config.yaml"
 }
 
 resource "null_resource" "generate_manifests" {
+
   triggers = {
-    install_config =  data.template_file.install_config_yaml.rendered
+    install_config = data.template_file.install_config_yaml.rendered
+    random_number  = "${data.aws_caller_identity.current.user_id}"
   }
 
   depends_on = [
@@ -152,8 +164,9 @@ resource "null_resource" "manifest_cleanup_control_plane_machineset" {
   ]
 
   triggers = {
-    install_config =  data.template_file.install_config_yaml.rendered
-    local_file     =  local_file.install_config.id
+    install_config = data.template_file.install_config_yaml.rendered
+    local_file     = local_file.install_config.id
+    random_number  = "${data.aws_caller_identity.current.user_id}"
   }
 
   provisioner "local-exec" {
@@ -167,7 +180,7 @@ resource "local_file" "cluster_infrastructure_config" {
     null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        =  "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
+  filename        = "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
 
   content = <<EOF
 apiVersion: config.openshift.io/v1
@@ -190,6 +203,29 @@ status:
     type: AWS
 EOF
 }
+
+# make masters schedulable
+resource "local_file" "cluster_scheduler_config" {
+  depends_on = [
+    null_resource.generate_manifests
+  ]
+  file_permission = "0644"
+  filename        = "${path.module}/temp/manifests/cluster-scheduler-02-config.yml"
+
+  content = <<EOF
+apiVersion: config.openshift.io/v1
+kind: Scheduler
+metadata:
+  creationTimestamp: null
+  name: cluster
+spec:
+  mastersSchedulable: true
+  policy:
+    name: ""
+status: {}
+EOF
+}
+
 # modify manifests/cluster-dns-02-config.yml
 resource "null_resource" "manifest_cleanup_dns_config" {
   depends_on = [
@@ -197,8 +233,9 @@ resource "null_resource" "manifest_cleanup_dns_config" {
   ]
 
   triggers = {
-    install_config =  data.template_file.install_config_yaml.rendered
-    local_file     =  local_file.install_config.id
+    install_config = data.template_file.install_config_yaml.rendered
+    local_file     = local_file.install_config.id
+    random_number  = "${data.aws_caller_identity.current.user_id}"
   }
 
   provisioner "local-exec" {
@@ -209,6 +246,7 @@ resource "null_resource" "manifest_cleanup_dns_config" {
 #redo the dns config
 resource "local_file" "dns_config" {
   count = var.airgapped.enabled ? 0 : 1
+
   depends_on = [
     null_resource.manifest_cleanup_dns_config
   ]
@@ -240,8 +278,9 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
   ]
 
   triggers = {
-    install_config =  data.template_file.install_config_yaml.rendered
-    local_file     =  local_file.install_config.id
+    install_config = data.template_file.install_config_yaml.rendered
+    local_file     = local_file.install_config.id
+    random_number  = "${data.aws_caller_identity.current.user_id}"
   }
 
   provisioner "local-exec" {
@@ -251,7 +290,7 @@ resource "null_resource" "manifest_cleanup_worker_machineset" {
 
 #redo the worker machineset
 resource "local_file" "worker_machineset" {
-  count           = length(var.aws_worker_availability_zones)
+  count = length(var.aws_worker_availability_zones)
 
   depends_on = [
     null_resource.manifest_cleanup_worker_machineset
@@ -328,14 +367,15 @@ EOF
 
 #redo the worker machineset
 resource "local_file" "ingresscontroller" {
-  count           = var.airgapped.enabled ? 1 : 0
+  # count           = var.airgapped.enabled ? 1 : 0
+  count = var.airgapped.enabled ? 0 : 0
 
   depends_on = [
     null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename = "${path.module}/temp/openshift/99_default_ingress_controller.yml"
-  content = <<EOF
+  filename        = "${path.module}/temp/openshift/99_default_ingress_controller.yml"
+  content         = <<EOF
 apiVersion: operator.openshift.io/v1
 kind: IngressController
 metadata:
@@ -349,13 +389,13 @@ EOF
 }
 
 resource "local_file" "awssecrets1" {
-  count           = var.airgapped.enabled ? 1 : 0
+  count = var.airgapped.enabled ? 1 : 0
 
   depends_on = [
     null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        =  "${path.module}/temp/openshift/99_awssecrets_image_registry.yml"
+  filename        = "${path.module}/temp/openshift/99_awssecrets_image_registry.yml"
 
   content = <<EOF
 apiVersion: v1
@@ -371,13 +411,13 @@ EOF
 }
 
 resource "local_file" "awssecrets2" {
-  count           = var.airgapped.enabled ? 1 : 0
+  count = var.airgapped.enabled ? 1 : 0
 
   depends_on = [
     null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        =  "${path.module}/temp/openshift/99_awssecrets_ingress.yml"
+  filename        = "${path.module}/temp/openshift/99_awssecrets_ingress.yml"
 
   content = <<EOF
 apiVersion: v1
@@ -393,13 +433,13 @@ EOF
 }
 
 resource "local_file" "awssecrets3" {
-  count           = var.airgapped.enabled ? 1 : 0
+  count = var.airgapped.enabled ? 1 : 0
 
   depends_on = [
     null_resource.generate_manifests
   ]
   file_permission = "0644"
-  filename        =  "${path.module}/temp/openshift/99_awssecrets_machine_api.yml"
+  filename        = "${path.module}/temp/openshift/99_awssecrets_machine_api.yml"
 
   content = <<EOF
 apiVersion: v1
@@ -426,12 +466,14 @@ resource "null_resource" "generate_ignition_config" {
     local_file.awssecrets3,
     local_file.airgapped_registry_upgrades,
     local_file.cluster_infrastructure_config,
+    local_file.cluster_scheduler_config,
   ]
 
   triggers = {
-    install_config                   =  data.template_file.install_config_yaml.rendered
-    local_file_install_config        =  local_file.install_config.id
-    local_file_infrastructure_config =  local_file.cluster_infrastructure_config.id
+    install_config                   = data.template_file.install_config_yaml.rendered
+    local_file_install_config        = local_file.install_config.id
+    local_file_infrastructure_config = local_file.cluster_infrastructure_config.id
+    random_number                    = "${data.aws_caller_identity.current.user_id}"
   }
 
   provisioner "local-exec" {
@@ -482,7 +524,7 @@ data "local_file" "bootstrap_ign" {
     null_resource.generate_ignition_config
   ]
 
-  filename =  "${path.module}/temp/bootstrap.ign"
+  filename = "${path.module}/temp/bootstrap.ign"
 }
 
 data "local_file" "master_ign" {
@@ -490,7 +532,7 @@ data "local_file" "master_ign" {
     null_resource.generate_ignition_config
   ]
 
-  filename =  "${path.module}/temp/master.ign"
+  filename = "${path.module}/temp/master.ign"
 }
 
 data "local_file" "worker_ign" {
@@ -498,26 +540,21 @@ data "local_file" "worker_ign" {
     null_resource.generate_ignition_config
   ]
 
-  filename =  "${path.module}/temp/worker.ign"
-}
-
-data "local_file" "cluster_infrastructure" {
-  depends_on = [
-    null_resource.generate_manifests
-  ]
-
-  filename =  "${path.module}/temp/manifests/cluster-infrastructure-02-config.yml"
+  filename = "${path.module}/temp/worker.ign"
 }
 
 resource "null_resource" "get_auth_config" {
   depends_on = [null_resource.generate_ignition_config]
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
   provisioner "local-exec" {
     when    = create
     command = "cp ${path.module}/temp/auth/* ${path.root}/ "
   }
   provisioner "local-exec" {
     when    = destroy
-    command = "rm ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
+    command = "rm -f ${path.root}/kubeconfig ${path.root}/kubeadmin-password "
   }
 }
 
@@ -527,7 +564,7 @@ resource "local_file" "airgapped_registry_upgrades" {
   depends_on = [
     null_resource.generate_manifests,
   ]
-  content  = <<EOF
+  content = <<EOF
 apiVersion: operator.openshift.io/v1alpha1
 kind: ImageContentSourcePolicy
 metadata:
@@ -542,3 +579,14 @@ spec:
     source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
 EOF
 }
+
+data "local_file" "kubeconfig" {
+  depends_on = [null_resource.get_auth_config]
+  filename   = "${path.root}/kubeconfig"
+}
+
+data "local_file" "kubeadmin-password" {
+  depends_on = [null_resource.get_auth_config]
+  filename   = "${path.root}/kubeadmin-password"
+}
+

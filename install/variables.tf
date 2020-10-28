@@ -19,27 +19,27 @@ variable "ami" {
 }
 
 variable "cluster_network_cidr" {
-  type        = string
-  default     = "192.168.0.0/17"
+  type    = string
+  default = "192.168.0.0/17"
 }
 
 variable "service_network_cidr" {
-  type        = string
-  default     = "192.168.128.0/24"
+  type    = string
+  default = "192.168.128.0/24"
 }
 
 variable "vpc_cidr_block" {
-  type        = string
-  default     = "192.168.0.0/24"
+  type    = string
+  default = "192.168.0.0/24"
 }
 
 variable "cluster_network_host_prefix" {
-  type        = string
-  default     = "23"
+  type    = string
+  default = "23"
 }
 
 variable "aws_worker_instance_type" {
-  type = string
+  type        = string
   description = "Instance type for the worker node(s). Example: `m4.large`."
 }
 
@@ -63,22 +63,33 @@ EOF
 
 }
 
-
 variable "master_count" {
   type        = number
   description = "The number of master nodes."
   default     = 3
 }
 
+variable "worker_count" {
+  type        = number
+  description = "The number of master nodes."
+  default     = 2
+}
+
 variable "openshift_pull_secret" {
-  type        = string
-  default     = "./openshift_pull_secret.json"
+  type    = string
+  default = "./openshift_pull_secret.json"
 }
 
 variable "openshift_installer_url" {
   type        = string
   description = "The URL to download OpenShift installer."
   default     = "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest"
+}
+
+variable "openshift_version" {
+  type        = string
+  description = "Version of OCP to install. Leave blank for latest"
+  default     = ""
 }
 
 variable "aws_access_key_id" {
@@ -98,12 +109,12 @@ variable "aws_region" {
 }
 
 variable "aws_worker_availability_zones" {
-  type = list(string)
+  type        = list(string)
   description = "The availability zones to provision for workers.  Worker instances are created by the machine-API operator, but this variable controls their supporting infrastructure (subnets, routing, etc.)."
 }
 
 variable "dns_public_id" {
-  type = string
+  type        = string
   description = "public route53 id"
 }
 
@@ -113,4 +124,10 @@ variable "airgapped" {
     airgapped  = false
     repository = ""
   }
+}
+
+variable "aws_publish_strategy" {
+  type        = string
+  description = "publish strategy for install-config.yml: Internal or External"
+  default     = "Internal"
 }

@@ -7,56 +7,68 @@ locals {
   )
 }
 
+data "aws_caller_identity" "current" {}
+
 provider "aws" {
   region = var.aws_region
-
-  # Validation of AWS Bahrain region was added in AWS TF provider v2.22
-  # so we skip when installing in me-south-1.
-  skip_region_validation = var.aws_region == "me-south-1"
 }
 
-module "iam" {
-  source = "./iam"
+resource "null_resource" "get_aws_access_key_id" {
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
+  provisioner "local-exec" {
+    command = "export TF_VAR_aws_access_key_id=$AWS_ACCESS_KEY_ID"
+  }
+}
 
-  cluster_id = var.cluster_id
-
-  tags = local.tags
+resource "null_resource" "get_aws_secret_access_key" {
+  triggers = {
+    random_number = "${data.aws_caller_identity.current.user_id} "
+  }
+  provisioner "local-exec" {
+    command = "export TF_VAR_aws_secret_access_key=$AWS_SECRET_ACCESS_KEY"
+  }
 }
 
 module "installer" {
   source = "./install"
 
-  ami = aws_ami_copy.main.id
-  dns_public_id = module.dns.public_dns_id
-  infrastructure_id = var.cluster_id
-  clustername = var.clustername
-  domain = var.base_domain
-  aws_region = var.aws_region
-  aws_access_key_id = var.aws_access_key_id
-  aws_secret_access_key = var.aws_secret_access_key
-  vpc_cidr_block = var.machine_cidr
-  master_count = length(var.aws_azs)
-  openshift_pull_secret = var.openshift_pull_secret
-  openshift_installer_url = var.openshift_installer_url
-  aws_worker_root_volume_iops = var.aws_worker_root_volume_iops
-  aws_worker_root_volume_size = var.aws_worker_root_volume_size
-  aws_worker_root_volume_type = var.aws_worker_root_volume_type
+  ami                           = aws_ami_copy.main.id
+  dns_public_id                 = module.dns.public_dns_id
+
+  infrastructure_id             = var.cluster_id
+  clustername                   = var.clustername
+  domain                        = var.base_domain
+  aws_region                    = var.aws_region
+  aws_access_key_id             = var.aws_access_key_id
+  aws_secret_access_key         = var.aws_secret_access_key
+  vpc_cidr_block                = var.machine_cidr
+  master_count                  = var.aws_master_instance_count
+  worker_count                  = var.aws_worker_instance_count
+  openshift_pull_secret         = var.openshift_pull_secret
+  openshift_installer_url       = var.openshift_installer_url
+  openshift_version             = var.openshift_version
+  aws_worker_root_volume_iops   = var.aws_worker_root_volume_iops
+  aws_worker_root_volume_size   = var.aws_worker_root_volume_size
+  aws_worker_root_volume_type   = var.aws_worker_root_volume_type
   aws_worker_availability_zones = var.aws_azs
-  aws_worker_instance_type = var.aws_worker_instance_type
-  airgapped = var.airgapped
+  aws_worker_instance_type      = var.aws_worker_instance_type
+  airgapped                     = var.airgapped
+  aws_publish_strategy          = var.aws_publish_strategy
 }
 
 module "vpc" {
   source = "./vpc"
 
-  cidr_block       = var.machine_cidr
-  cluster_id       = var.cluster_id
-  region           = var.aws_region
-  vpc              = var.aws_vpc
-  public_subnets   = var.aws_public_subnets
-  private_subnets  = var.aws_private_subnets
-  publish_strategy = var.aws_publish_strategy
-  airgapped = var.airgapped
+  cidr_block         = var.machine_cidr
+  cluster_id         = var.cluster_id
+  region             = var.aws_region
+  vpc                = var.aws_vpc
+  public_subnets     = var.aws_public_subnets
+  private_subnets    = var.aws_private_subnets
+  publish_strategy   = var.aws_publish_strategy
+  airgapped          = var.airgapped
   availability_zones = var.aws_azs
 
   tags = local.tags
@@ -123,7 +135,7 @@ module "masters" {
 
   availability_zones       = var.aws_azs
   az_to_subnet_id          = module.vpc.az_to_private_subnet_id
-  instance_count           = length(var.aws_azs)
+  instance_count           = var.aws_master_instance_count
   master_sg_ids            = [module.vpc.master_sg_id]
   root_volume_iops         = var.aws_master_root_volume_iops
   root_volume_size         = var.aws_master_root_volume_size
@@ -132,5 +144,49 @@ module "masters" {
   target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
   ec2_ami                  = aws_ami_copy.main.id
   user_data_ign            = module.installer.master_ign
+  publish_strategy         = var.aws_publish_strategy
+}
+ 
+module "workers" {
+  source = "./worker"
+
+  cluster_id    = var.cluster_id
+  instance_type = var.aws_worker_instance_type
+
+  tags = local.tags
+
+  availability_zones       = var.aws_azs
+  az_to_subnet_id          = module.vpc.az_to_private_subnet_id
+  instance_count           = var.aws_worker_instance_count
+  worker_sg_ids            = [module.vpc.worker_sg_id]
+  root_volume_iops         = var.aws_worker_root_volume_iops
+  root_volume_size         = var.aws_worker_root_volume_size
+  root_volume_type         = var.aws_worker_root_volume_type
+  target_group_arns        = module.vpc.aws_lb_target_group_arns
+  target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
+  ec2_ami                  = aws_ami_copy.main.id
+  user_data_ign            = module.installer.worker_ign
+  publish_strategy         = var.aws_publish_strategy
+}
+
+module "infra" {
+  source = "./infra"
+
+  cluster_id    = var.cluster_id
+  instance_type = var.aws_infra_instance_type
+
+  tags = local.tags
+
+  availability_zones       = var.aws_azs
+  az_to_subnet_id          = module.vpc.az_to_private_subnet_id
+  instance_count           = var.aws_infra_instance_count
+  worker_sg_ids            = [module.vpc.worker_sg_id]
+  root_volume_iops         = var.aws_worker_root_volume_iops
+  root_volume_size         = var.aws_worker_root_volume_size
+  root_volume_type         = var.aws_worker_root_volume_type
+  target_group_arns        = module.vpc.aws_lb_target_group_arns
+  target_group_arns_length = module.vpc.aws_lb_target_group_arns_length
+  ec2_ami                  = aws_ami_copy.main.id
+  user_data_ign            = module.installer.worker_ign
   publish_strategy         = var.aws_publish_strategy
 }
